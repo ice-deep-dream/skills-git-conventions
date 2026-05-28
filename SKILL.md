@@ -1,0 +1,195 @@
+---
+name: git-conventions
+description: Git 规范助手 — 初始化项目、模块提交推送、生成仓库文档（README/CHANGELOG）。触发词：初始化项目、连接git、提交推送、生成文档、写commit message。
+---
+
+# Git 规范助手
+
+简化版 Git 工作流 + 文档生成。
+
+---
+
+## 一、初始化项目
+
+**触发词**：「初始化项目」「连接git」
+
+### 工作流
+
+```
+1. 确认项目目的 → 用户说明
+2. 初始化 Git → git init
+3. 创建 .gitignore → 按项目类型
+4. 连接远程 → git remote add origin <url>
+5. 首次提交 → git add . && git commit -m "feat: initial commit"
+6. 推送 → git push -u origin main
+```
+
+### .gitignore 模板
+
+| 项目类型 | 忽略内容 |
+|:--------:|:---------|
+| Node | `node_modules/`, `dist/`, `.env` |
+| Python | `__pycache__/`, `.venv/`, `*.pyc` |
+|通用| `.DS_Store`, `Thumbs.db`, `*.log` |
+
+---
+
+## 二、提交推送
+
+**触发词**：「提交」「推送」「写commit message」
+
+### Commit 格式
+
+```
+<type>(<module>): <desc>
+```
+
+| type | 用途 | 示例 |
+|:----:|:-----|:-----|
+| `feat` | 新功能 | `feat(core): add plan generator` |
+| `fix` | 修复 | `fix(ui): resolve layout issue` |
+| `docs` | 文档 | `docs: update README` |
+| `refactor` | 重构 | `refactor(utils): simplify logic` |
+| `chore` | 杂项 | `chore: update dependencies` |
+
+### 工作流
+
+```
+1. 查看变更 → git status && git diff --staged
+2. 分析模块 → 确认 <module> 范围
+3. 生成消息 → 按格式生成，≤ 50 字
+4. 等待确认 → 用户同意后执行
+5. 提交 → git commit -m "<message>"
+6. 推送 → git push (用户指令)
+```
+
+### 模块命名规则
+
+- 按目录/功能划分：`core`, `ui`, `api`, `docs`, `utils`
+- 单文件变更：用文件名（去掉扩展名）
+
+---
+
+## 三、生成仓库文档
+
+**触发词**：「生成文档」「初始化仓库文档」「生成 README」
+
+### 输出要求
+
+- **双语**：中文版主文件，英文版 `README.en.md`
+- **Icon**：使用 Shields.io徽章显示环境
+- **风格**：干净优雅，表格对齐，无冗余
+
+### README 结构
+
+```markdown
+# 项目名称
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Node-18.x-339933?logo=node.js" />
+  <img src="https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript" />
+  <img src="https://img.shields.io/badge/License-MIT-blue" />
+</p>
+
+> 一句话描述项目用途
+
+---
+
+## 功能
+
+| 功能 | 说明 |
+|:-----|:-----|
+| 功能A | 描述 |
+| 功能B | 描述 |
+
+---
+
+## 快速开始
+
+\`\`\`bash
+# 安装
+npm install
+
+# 运行
+npm start
+\`\`\`
+
+---
+
+## 目录结构
+
+\`\`\`
+project/
+├── src/
+│   ├── core/       # 核心模块
+│   └── utils/      # 工具函数
+└── docs/           # 文档
+\`\`\`
+
+---
+
+## 许可证
+
+MIT
+```
+
+### 徽章模板
+
+| 环境 |徽章 |
+|:-----|:-----|
+| Node | `https://img.shields.io/badge/Node-18.x-339933?logo=node.js` |
+| Python | `https://img.shields.io/badge/Python-3.10-3776AB?logo=python` |
+| TypeScript | `https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript` |
+| React | `https://img.shields.io/badge/React-18.x-61DAFB?logo=react` |
+| Vue | `https://img.shields.io/badge/Vue-3.x-4FC08D?logo=vue.js` |
+
+### 工作流
+
+```
+1. 扫描项目 → package.json / 目录结构
+2. 确认环境 → Node/Python/框架版本
+3. 生成中文版 → README.md
+4. 生成英文版 → README.en.md
+5. 确认内容 → 用户审核
+```
+
+---
+
+## 四、CHANGELOG 生成
+
+**触发词**：「生成 CHANGELOG」
+
+### 格式
+
+```markdown
+# CHANGELOG
+
+## [1.0.0] - 2024-01-01
+
+### Added
+- 新功能描述
+
+### Fixed
+- 修复描述
+
+### Changed
+- 变更描述
+```
+
+### 工作流
+
+```
+1. 获取版本 → git tag --sort=-v:refname
+2. 获取提交 → git log <tag1>..<tag2> --oneline
+3. 分类整理 → Added / Fixed / Changed
+4. 生成文件 → CHANGELOG.md
+```
+
+---
+
+## 注意事项
+
+1. **不自动执行** — 所有 git 操作等待用户确认
+2. **先查状态** — 提交前先 `git status`
+3. **简洁描述** — commit message ≤ 50字
+4. **模块划分** — 按 功能/目录 确定scope
