@@ -1,11 +1,30 @@
 ---
 name: git-conventions
-description: Git 规范助手 — 初始化项目、模块提交推送、生成仓库文档（README/CHANGELOG）。触发词：初始化项目、连接git、提交推送、生成文档、写commit message。
+description: Git 规范助手 — 初始化项目、模块提交推送、生成仓库文档（README/CHANGELOG）、Issue 管理。触发词：初始化项目、连接git、提交推送、生成文档、写commit message、提交issue。
 ---
 
 # Git 规范助手
 
-简化版 Git 工作流 + 文档生成。
+简化版 Git 工作流 + 文档生成 + Issue 管理。
+
+---
+
+## 前置条件
+
+### GitHub CLI 检测
+
+使用 Issue/PR 功能前，需确认 gh CLI 状态：
+
+```bash
+# 检测安装
+where gh
+
+# 检测登录状态
+gh auth status
+
+# 未登录时提示
+gh auth login
+```
 
 ---
 
@@ -187,9 +206,74 @@ MIT
 
 ---
 
+## 五、Issue 管理
+
+**触发词**：「提交 issue」「创建 issue」「新建 issue」
+
+### 前置检测
+
+```
+1. 检测 gh CLI → where gh
+2. 检测登录状态 → gh auth status
+3. 未登录提示 → 请先运行 gh auth login
+```
+
+### Issue 模板
+
+| 类型 | 标题前缀 | 内容模板 |
+|:-----|:---------|:---------|
+| bug | `fix:` | 问题描述、复现步骤、期望结果 |
+| feature | `feat:` | 功能描述、使用场景、验收标准 |
+| enhancement | `enhance:` | 增强描述、改进方案 |
+
+### 工作流
+
+```
+1. 确认仓库 → git remote -v 或用户指定
+2. 输入标题 → 用户输入或从参数解析
+3. 输入内容 → 支持 markdown
+4. 选择标签 → bug/feature/enhancement（可选）
+5. 确认创建 → 用户同意后执行
+6. 执行创建 → gh issue create --repo <repo> --title "<title>" --body "<body>"
+7. 返回链接 → 输出 Issue URL
+```
+
+### 使用示例
+
+```
+用户: 提交 issue 到 skills-git-conventions，标题是 "fix: 启动崩溃"
+AI: 正在创建 Issue...
+    仓库: ice-deep-dream/skills-git-conventions
+    标题: fix: 启动崩溃
+    内容: (请输入详细描述)
+    确认创建？(y/n)
+用户: y
+AI: ✅ Issue 已创建: https://github.com/ice-deep-dream/skills-git-conventions/issues/1
+```
+
+---
+
+## 六、Pull Request
+
+**触发词**：「创建 PR」「提交 PR」「新建 PR」
+
+### 工作流
+
+```
+1. 检测当前分支 → git branch --show-current
+2. 推送分支 → git push -u origin <branch>（如未推送）
+3. 输入标题 → 用户输入或从 commits 提取
+4. 输入描述 → 支持 markdown 模板
+5. 确认创建 → gh pr create
+6. 返回链接 → 输出 PR URL
+```
+
+---
+
 ## 注意事项
 
 1. **不自动执行** — 所有 git 操作等待用户确认
 2. **先查状态** — 提交前先 `git status`
 3. **简洁描述** — commit message ≤ 50字
 4. **模块划分** — 按 功能/目录 确定scope
+5. **gh CLI 检测** — Issue/PR 功能需确认 gh 已登录
