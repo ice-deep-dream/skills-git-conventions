@@ -1,11 +1,11 @@
 ---
 name: git-conventions
-description: Git 规范助手 — 初始化项目、模块提交推送、生成仓库文档（README/CHANGELOG）、Issue 管理。触发词：初始化项目、连接git、提交推送、生成文档、写commit message、提交issue。
+description: Git 规范助手 — 初始化项目、模块提交推送、生成仓库文档（README/CHANGELOG）、Issue 管理、部署 VitePress 文档站点。触发词：初始化项目、连接git、提交推送、生成文档、写commit message、提交issue、部署文档站点。
 ---
 
 # Git 规范助手
 
-简化版 Git 工作流 + 文档生成 + Issue 管理。
+简化版 Git 工作流 + 文档生成 + Issue 管理 + VitePress 文档站点部署。
 
 ---
 
@@ -325,7 +325,201 @@ AI: ✅ Issue 已创建: https://github.com/xxx/xxx/issues/1
 
 ---
 
-## 六、Pull Request
+## 六、部署 VitePress 文档站点
+
+**触发词**：「部署文档站点」「创建文档站点」「配置 GitHub Pages」「部署 VitePress」
+
+### 功能说明
+
+为任何项目创建 VitePress 文档站点，并配置 GitHub Actions 自动部署到 GitHub Pages。
+
+### 工作流
+
+```
+1. 分析项目结构 → 确认技术栈和功能
+2. 创建 docs/ 目录 → 生成 VitePress 站点结构
+3. 配置 VitePress → config.ts、首页、文档
+4. 创建 GitHub Actions → 自动部署 workflow
+5. 提交并推送 → 等待用户确认
+6. 提醒启用 Pages → 用户手动设置
+```
+
+### 目录结构
+
+```
+project/
+├── docs/
+│   ├── .vitepress/
+│   │   └── config.ts      # VitePress 配置
+│   ├── public/            # 静态资源
+│   │   └── 404.html       # SPA 路由处理
+│   ├── index.md           # 首页
+│   ├── guide/             # 指南文档
+│   └── package.json       # 文档依赖
+└── .github/
+    └── workflows/
+        └── deploy.yml     # GitHub Actions 部署
+```
+
+### package.json 模板
+
+```json
+{
+  "name": "<project>-docs",
+  "version": "0.1.0",
+  "description": "<project> 文档",
+  "type": "module",
+  "scripts": {
+    "docs:dev": "vitepress dev",
+    "docs:build": "vitepress build",
+    "docs:preview": "vitepress preview"
+  },
+  "devDependencies": {
+    "vitepress": "^1.6.4"
+  }
+}
+```
+
+### config.ts 关键配置
+
+```typescript
+import { defineConfig } from 'vitepress'
+
+export default defineConfig({
+  title: '<Project Name>',
+  description: '<Project Description>',
+  base: '/<repo-name>/',        // 必须与仓库名一致
+  ignoreDeadLinks: true,        // 忽略 localhost 等死链接
+  themeConfig: {
+    nav: [...],
+    sidebar: [...],
+    socialLinks: [
+      { icon: 'github', link: 'https://github.com/<user>/<repo>' },
+    ],
+    search: {
+      provider: 'local',
+    },
+  },
+})
+```
+
+### GitHub Actions workflow 模板
+
+```yaml
+name: Deploy VitePress site to Pages
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: docs/package-lock.json
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: docs
+
+      - name: Build with VitePress
+        run: npm run docs:build
+        working-directory: docs
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/.vitepress/dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    needs: build
+    runs-on: ubuntu-latest
+    name: Deploy
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+```
+
+### 404.html 模板
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Project Name</title>
+  <script>
+    sessionStorage.redirect = location.href;
+  </script>
+  <meta http-equiv="refresh" content="0;URL='/repo-name/'"></meta>
+</head>
+<body>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</body>
+</html>
+```
+
+### 重要注意事项
+
+| 配置项 | 说明 |
+|:-------|:-----|
+| `base` | 必须设置为 `/仓库名/`，否则 GitHub Pages 无法正确加载资源 |
+| `ignoreDeadLinks` | 设置为 `true` 避免 localhost 链接导致构建失败 |
+| `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24` | 强制使用 Node.js 24 运行 Actions |
+| `actions/checkout@v5` | 最新版本 checkout action |
+| `actions/setup-node@v6` | 最新版本 node setup |
+
+### GitHub Pages 设置提醒
+
+部署后提醒用户：
+
+1. 进入仓库 → **Settings** → **Pages**
+2. 在 **Source** 中选择 **GitHub Actions**（不是 Deploy from a branch）
+3. 等待部署完成（约 2-5 分钟）
+4. 访问地址：`https://<username>.github.io/<repo-name>/`
+
+### 常见问题处理
+
+| 问题 | 解决方案 |
+|:-----|:---------|
+| 构建失败：dead links | 在 config.ts 中添加 `ignoreDeadLinks: true` |
+| 页面 404 | 确认 `base` 设置为 `/仓库名/`，等待 Pages 生效 |
+| Actions Node.js 20 警告 | 添加 `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true` |
+
+---
+
+## 七、Pull Request
 
 **触发词**：「创建 PR」「提交 PR」「新建 PR」
 
@@ -349,3 +543,5 @@ AI: ✅ Issue 已创建: https://github.com/xxx/xxx/issues/1
 3. **简洁描述** — commit message ≤ 50字
 4. **模块划分** — 按 功能/目录 确定scope
 5. **gh CLI 检测** — Issue/PR 功能需确认 gh 已登录
+6. **VitePress 部署** — base 路径必须与仓库名一致
+7. **用户确认** — 部署文档站点前需用户确认
