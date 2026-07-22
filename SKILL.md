@@ -28,19 +28,85 @@ gh auth login
 
 ---
 
-## 一、初始化项目
+## 功能阶段总览
+
+| 阶段 | 功能 | 触发词 | 执行时机 |
+|:----:|:-----|:-------|:---------|
+| **阶段一** | 项目初始化 | `初始化项目` `连接git` | 首次使用 skill / 新项目 |
+| **阶段二** | 项目私有化 | `私有化` `重写README` | 从他人项目改造时 |
+| **阶段三** | 提交推送 | `提交` `推送` `写commit message` | 有代码变更时 |
+| **阶段四** | 生成仓库文档 | `生成文档` `生成README` | 项目成熟期 |
+| **阶段五** | CHANGELOG 生成 | `生成CHANGELOG` | 版本发布时 |
+| **阶段六** | Issue 管理 | `提交issue` `创建issue` | 发现问题/改进点时 |
+| **阶段七** | 部署文档站点 | `部署文档站点` `部署VitePress` | 需要文档网站时 |
+| **阶段八** | Pull Request | `创建PR` `提交PR` | 分支开发完成时 |
+
+---
+
+## 阶段一：项目初始化
 
 **触发词**：「初始化项目」「连接git」
+
+**执行时机**：首次使用 skill / 新建项目
 
 ### 工作流
 
 ```
-1. 确认项目目的 → 用户说明
-2. 初始化 Git → git init
-3. 创建 .gitignore → 按项目类型
-4. 连接远程 → git remote add origin <url>
-5. 首次提交 → git add . && git commit -m "feat: initial commit"
-6. 推送 → git push -u origin main
+1. 检测 Git 状态
+   ├─ 检测是否已初始化 → git rev-parse --git-dir
+   ├─ 检测是否有远程 → git remote -v
+   └─ 检测当前分支 → git branch --show-current
+
+2. 判断场景
+   ├─ 场景 A：无 Git → 执行完整初始化
+   ├─ 场景 B：有 Git 无远程 → 提醒用户连接远程
+   └─ 场景 C：有 Git 有远程 → 跳过初始化
+
+3. 执行初始化（按场景）
+   ├─ git init（如未初始化）
+   ├─ 创建 .gitignore（如不存在）
+   ├─ git remote add origin <url>（如无远程）
+   └─ 首次提交（如无提交记录）
+
+4. 输出状态报告
+```
+
+### 场景判断逻辑
+
+#### 场景 A：无 Git 初始化
+
+```
+检测：git rev-parse --git-dir 失败
+
+执行：
+1. 询问用户项目目的
+2. git init
+3. 创建 .gitignore（按项目类型）
+4. 提醒用户连接远程
+5. 等待用户确认后执行首次提交
+```
+
+#### 场景 B：有 Git 无远程
+
+```
+检测：git remote -v 为空
+
+执行：
+1. 输出警告：「⚠️ 当前项目未连接远程仓库」
+2. 询问用户是否连接远程
+3. 用户输入远程地址 → git remote add origin <url>
+4. 检测是否需要推送 → git push -u origin <branch>
+```
+
+#### 场景 C：有 Git 有远程
+
+```
+检测：git remote -v 有内容
+
+执行：
+1. 输出当前状态：「✅ 项目已初始化并连接远程」
+2. 显示远程地址和当前分支
+3. 询问用户是否需要其他操作
 ```
 
 ### .gitignore 模板
@@ -49,13 +115,340 @@ gh auth login
 |:--------:|:---------|
 | Node | `node_modules/`, `dist/`, `.env` |
 | Python | `__pycache__/`, `.venv/`, `*.pyc` |
-|通用| `.DS_Store`, `Thumbs.db`, `*.log` |
+| 通用 | `.DS_Store`, `Thumbs.db`, `*.log` |
+
+### 状态报告模板
+
+```
+📊 项目初始化状态报告
+─────────────────────────────────
+Git 状态：    ✅ 已初始化 / ❌ 未初始化
+远程仓库：    ✅ 已连接 / ❌ 未连接
+当前分支：    main / master / <branch>
+提交记录：    X 条提交
+
+下一步操作：
+□ 连接远程仓库（如未连接）
+□ 创建首次提交（如无提交）
+□ 推送到远程
+```
 
 ---
 
-## 二、提交推送
+## 阶段二：项目私有化
+
+**触发词**：「私有化」「重写README」「替换主题」
+
+**执行时机**：从他人项目改造为自己的项目时
+
+### 功能说明
+
+将从远程获取的开源项目改造为符合 Cryodream 规范的私有项目：
+
+- 重写 README（中英双语）
+- 替换项目主题信息（名称、作者、GitHub、邮箱）
+- 遍历代码替换主题信息
+- 添加原作者鸣谢
+
+### 工作流
+
+```
+1. 检测远程仓库
+   ├─ git remote -v → 获取原始仓库地址
+   └─ 确认是否为他人项目
+
+2. 询问用户确认
+   ├─ 是否进行私有化改造？
+   ├─ 是否保留原项目结构？
+   └─ 是否需要额外定制？
+
+3. 执行私有化
+   ├─ 备份原始 README（可选）
+   ├─ 生成新 README（中英双语）
+   ├─ 遍历代码替换主题信息
+   └─ 添加鸣谢信息
+
+4. 输出变更报告
+```
+
+### README 重写规范
+
+#### 中文版 (README.md)
+
+```markdown
+# Cryodream - <项目功能名称>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Node-18.x-339933?logo=node.js" />
+  <img src="https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript" />
+  <img src="https://img.shields.io/badge/License-MIT-blue" />
+</p>
+
+> 一句话描述项目用途
+
+---
+
+## 功能
+
+| 功能 | 说明 |
+|:-----|:-----|
+| 功能A | 描述 |
+| 功能B | 描述 |
+
+---
+
+## 快速开始
+
+\`\`\`bash
+# 安装
+npm install
+
+# 运行
+npm start
+\`\`\`
+
+---
+
+## 目录结构
+
+\`\`\`
+cryodream-<project>/
+├── src/
+│   ├── core/       # 核心模块
+│   └── utils/      # 工具函数
+└── docs/           # 文档
+\`\`\`
+
+---
+
+## 致谢
+
+本项目基于 [原项目名称](原项目地址) 开发，感谢原作者的贡献。
+
+---
+
+## 作者
+
+**Cryodream**
+- GitHub: [ice-deep-dream](https://github.com/ice-deep-dream)
+- Email: 1172624289@qq.com
+
+---
+
+## 许可证
+
+MIT
+```
+
+#### 英文版 (README.en.md)
+
+```markdown
+# Cryodream - <Project Feature Name>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Node-18.x-339933?logo=node.js" />
+  <img src="https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript" />
+  <img src="https://img.shields.io/badge/License-MIT-blue" />
+</p>
+
+> One-line project description
+
+---
+
+## Features
+
+| Feature | Description |
+|:--------|:------------|
+| Feature A | Description |
+| Feature B | Description |
+
+---
+
+## Quick Start
+
+\`\`\`bash
+# Install
+npm install
+
+# Run
+npm start
+\`\`\`
+
+---
+
+## Directory Structure
+
+\`\`\`
+cryodream-<project>/
+├── src/
+│   ├── core/       # Core module
+│   └── utils/      # Utility functions
+└── docs/           # Documentation
+\`\`\`
+
+---
+
+## Acknowledgments
+
+This project is based on [Original Project Name](Original Project URL). Thanks to the original author's contribution.
+
+---
+
+## Author
+
+**Cryodream**
+- GitHub: [ice-deep-dream](https://github.com/ice-deep-dream)
+- Email: 1172624289@qq.com
+
+---
+
+## License
+
+MIT
+```
+
+### 主题信息替换规则
+
+| 替换项 | 替换为 | 替换范围 |
+|:-------|:-------|:---------|
+| 项目名称 | `Cryodream` 或 `Cryodream - <功能名>` | README, package.json, 配置文件 |
+| 作者名称 | `Cryodream` | README, package.json, LICENSE |
+| GitHub 地址 | `https://github.com/ice-deep-dream` | README, package.json, 文档文件 |
+| 邮箱 | `1172624289@qq.com` | README, package.json, LICENSE |
+| Logo/图标 | 移除或替换为 Cryodream 标识 | README, 网页文件 |
+| 广告/推广 | 移除 | README, 文档文件 |
+
+### 代码遍历替换策略
+
+```
+遍历范围：
+├─ README.md / README.en.md
+├─ package.json
+├─ LICENSE
+├─ docs/ 目录
+├─ src/ 目录（可选，需用户确认）
+└─ 配置文件（.env.example, config.*）
+
+替换原则：
+├─ 仅替换用户可见的元信息
+├─ 不修改核心业务逻辑代码
+├─ 保留原有的开源协议声明
+└─ 添加鸣谢信息
+```
+
+### 鸣谢模板
+
+```markdown
+## 致谢 / Acknowledgments
+
+本项目基于 [原项目名称](原项目地址) 开发。
+
+感谢原作者：
+- 原作者名称 (原GitHub地址)
+
+本项目在原有基础上进行了以下改造：
+- 重写了项目文档
+- 调整了项目结构
+- 替换了主题配置
+
+---
+
+## 作者 / Author
+
+**Cryodream**
+- GitHub: [ice-deep-dream](https://github.com/ice-deep-dream)
+- Email: 1172624289@qq.com
+```
+
+### 变更报告模板
+
+```
+📋 私有化变更报告
+─────────────────────────────────
+原始仓库：<原项目地址>
+
+已执行操作：
+✅ 备份原始 README → README.original.md
+✅ 生成中文版 README.md
+✅ 生成英文版 README.en.md
+✅ 更新 package.json 元信息
+✅ 更新 LICENSE 作者信息
+✅ 添加致谢章节
+
+替换统计：
+├─ 项目名称：X 处
+├─ 作者信息：X 处
+├─ GitHub 地址：X 处
+├─ 邮箱地址：X 处
+└─ 移除广告：X 处
+
+保留内容：
+├─ 开源协议声明
+├─ 核心代码逻辑
+└─ 原始文档结构
+
+下一步操作：
+□ 检查变更内容
+□ 确认无遗漏
+□ 提交变更
+```
+
+### 使用示例
+
+```
+用户: 我从 GitHub 克隆了一个项目，想把它改造成自己的项目
+
+AI: 检测到当前项目来自：<原项目地址>
+    
+    是否需要进行私有化改造？
+    1. 重写 README（中英双语）
+    2. 替换主题信息为 Cryodream
+    3. 添加原作者鸣谢
+    
+    是否继续？(y/n)
+
+用户: y
+
+AI: 正在执行私有化改造...
+    
+    [1/5] 备份原始 README...
+    [2/5] 生成新 README...
+    [3/5] 替换主题信息...
+    [4/5] 更新元信息文件...
+    [5/5] 添加鸣谢信息...
+    
+    ✅ 私有化完成！
+    
+    📋 变更报告：
+    ─────────────────────────────────
+    已替换 15 处项目信息
+    已移除 3 处广告链接
+    已添加致谢章节
+    
+    文件变更：
+    M  README.md
+    A  README.en.md
+    A  README.original.md
+    M  package.json
+    M  LICENSE
+    
+    是否需要查看详细变更？(y/n)
+
+用户: n
+
+AI: 建议执行以下操作：
+    1. 检查 README 内容是否符合预期
+    2. 确认 package.json 配置正确
+    3. 提交变更：git add . && git commit -m "chore: privatize project"
+```
+
+---
+
+## 阶段三：提交推送
 
 **触发词**：「提交」「推送」「写commit message」
+
+**执行时机**：有代码变更时
 
 ### Commit 格式
 
@@ -89,14 +482,16 @@ gh auth login
 
 ---
 
-## 三、生成仓库文档
+## 阶段四：生成仓库文档
 
 **触发词**：「生成文档」「初始化仓库文档」「生成 README」
+
+**执行时机**：项目成熟期，需要规范化文档时
 
 ### 输出要求
 
 - **双语**：中文版主文件，英文版 `README.en.md`
-- **Icon**：使用 Shields.io徽章显示环境
+- **Icon**：使用 Shields.io 徽章显示环境
 - **风格**：干净优雅，表格对齐，无冗余
 
 ### README 结构
@@ -154,7 +549,7 @@ MIT
 
 ### 徽章模板
 
-| 环境 |徽章 |
+| 环境 | 徽章 |
 |:-----|:-----|
 | Node | `https://img.shields.io/badge/Node-18.x-339933?logo=node.js` |
 | Python | `https://img.shields.io/badge/Python-3.10-3776AB?logo=python` |
@@ -174,9 +569,11 @@ MIT
 
 ---
 
-## 四、CHANGELOG 生成
+## 阶段五：CHANGELOG 生成
 
 **触发词**：「生成 CHANGELOG」
+
+**执行时机**：版本发布时
 
 ### 格式
 
@@ -206,7 +603,11 @@ MIT
 
 ---
 
-## 五、Issue 管理
+## 阶段六：Issue 管理
+
+**触发词**：「提交 issue」「创建 issue」
+
+**执行时机**：发现问题/改进点时
 
 ### 推荐机制
 
@@ -316,7 +717,7 @@ AI: 正在生成 Issue 内容...
     - [ ] 添加单元测试
     ─────────────────────────────
     
-    确认创建？(y/n/编辑)
+    确认创建？
 
 用户: y
 
@@ -325,9 +726,11 @@ AI: ✅ Issue 已创建: https://github.com/xxx/xxx/issues/1
 
 ---
 
-## 六、部署 VitePress 文档站点
+## 阶段七：部署 VitePress 文档站点
 
 **触发词**：「部署文档站点」「创建文档站点」「配置 GitHub Pages」「部署 VitePress」
+
+**执行时机**：需要文档网站时
 
 ### 功能说明
 
@@ -519,9 +922,11 @@ jobs:
 
 ---
 
-## 七、Pull Request
+## 阶段八：Pull Request
 
 **触发词**：「创建 PR」「提交 PR」「新建 PR」
+
+**执行时机**：分支开发完成时
 
 ### 工作流
 
@@ -545,3 +950,4 @@ jobs:
 5. **gh CLI 检测** — Issue/PR 功能需确认 gh 已登录
 6. **VitePress 部署** — base 路径必须与仓库名一致
 7. **用户确认** — 部署文档站点前需用户确认
+8. **私有化谨慎** — 替换主题信息前需用户确认，保留原作者鸣谢
